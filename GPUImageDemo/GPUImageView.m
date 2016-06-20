@@ -62,7 +62,8 @@ NSString *const kGPUImagePassthroughFragmentShaderString = SHADER_STRING
     GLint displayInputTextureUniform;
     
     GLint radiusUniform, centerUniform, aspectRatioUniform, refractiveIndexUniform;
-    
+    GLint modelUniform, viewUniform, projectionUniform;
+
     GLuint displayRenderbuffer, displayFramebuffer;
     GLfloat imageVertices[8];
     
@@ -140,10 +141,9 @@ NSString *const kGPUImagePassthroughFragmentShaderString = SHADER_STRING
     displayTextureCoordinateAttribute = [displayProgram attributeIndex:@"inputTextureCoordinate"];
     displayInputTextureUniform = [displayProgram uniformIndex:@"inputImageTexture"];
     
-    radiusUniform = [displayProgram uniformIndex:@"radius"];
-    aspectRatioUniform = [displayProgram uniformIndex:@"aspectRatio"];
-    centerUniform = [displayProgram uniformIndex:@"center"];
-    refractiveIndexUniform = [displayProgram uniformIndex:@"refractiveIndex"];
+    modelUniform = [displayProgram uniformIndex:@"model"];
+    viewUniform = [displayProgram uniformIndex:@"view"];
+    projectionUniform = [displayProgram uniformIndex:@"projectio"];
     
     [displayProgram use];
     glEnableVertexAttribArray(displayPositionAttribute);
@@ -264,18 +264,6 @@ NSString *const kGPUImagePassthroughFragmentShaderString = SHADER_STRING
     glUniform1i(displayInputTextureUniform, 4);
     glVertexAttribPointer(displayPositionAttribute, 2, GL_FLOAT, 0, 0, imageVertices);
     
-    glUniform1f(radiusUniform, _radius);
-    GLfloat positionArray[2];
-    positionArray[0] = _centerPoint.x;
-    positionArray[1] = _centerPoint.y;
-    
-    glUniform2fv(centerUniform, 1, positionArray);
-    
-    glUniform1f(refractiveIndexUniform, 0.71);
-    
-    glUniform1f(aspectRatioUniform, sizeInPixels.width/sizeInPixels.height);
-
-    
     static const GLfloat noRotationTextureCoordinates[] = {
         0.0f, 1.0f,
         1.0f, 1.0f,
@@ -284,6 +272,31 @@ NSString *const kGPUImagePassthroughFragmentShaderString = SHADER_STRING
     };
     
     glVertexAttribPointer(displayTextureCoordinateAttribute, 2, GL_FLOAT, 0, 0, noRotationTextureCoordinates);
+    
+    GLKMatrix4 viewM = GLKMatrix4Identity;
+    GLfloat radius = 10.0f;
+    GLfloat camX = sin([NSDate timeIntervalSinceReferenceDate]) * radius;
+    GLfloat camZ = cos([NSDate timeIntervalSinceReferenceDate]) * radius;
+    
+    viewM = GLKMatrix4MakeLookAt(camX, 0, camZ, 0, 0, 0, 0, 1, 0);
+    
+    GLKMatrix4 modelM = GLKMatrix4Identity;
+    GLKMatrix4 projectionM = GLKMatrix4Identity;
+    
+    
+    
+//    glUniform1f(radiusUniform, _radius);
+//    GLfloat positionArray[2];
+//    positionArray[0] = _centerPoint.x;
+//    positionArray[1] = _centerPoint.y;
+//    
+//    glUniform2fv(centerUniform, 1, positionArray);
+//    
+//    glUniform1f(refractiveIndexUniform, 0.71);
+//    
+//    glUniform1f(aspectRatioUniform, sizeInPixels.width/sizeInPixels.height);
+    
+    
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     
     [self presentFramebuffer];
